@@ -290,6 +290,27 @@ class SamReader(object):
             
         stdout.close()
         
+    def chr(self, chr):
+        """
+        Iterate over the reads on a particular genome in the bam file.
+        """
+        
+        if self.__paired:
+            cmd = [self.__samtools, 'view', '-f', '3', self.__bam, chr]
+        else:
+            cmd = [self.__samtools, 'view', '-F', '4', self.__bam, chr]
+            
+        stdout = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout
+        
+        for l in stdout:
+            tokens = l.decode('utf-8').strip().split('\t')
+    
+            read = parse_sam_read(tokens)
+            
+            yield read
+            
+        stdout.close()
+        
 
 class BamWriter(object):
     def __init__(self, bam, paired=False, samtools='samtools'):
