@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name='libbam',
-    version='0.2.0',
+    version='0.3.0',
     author='Antony B Holmes',
     author_email='antony.b.holmes@gmail.com',
     description='A library for reading and writing SAM/BAM files.',

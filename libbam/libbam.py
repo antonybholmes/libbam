@@ -175,13 +175,13 @@ class SamRead(object):
 
 def parse_sam_read(sam):
     """
-    Parses a SAM alignment and returns a SamFile object
+    Parses a SAM alignment and returns a SamFile object.
     
     Parameters
     ----------
     sam : str or list
-        Either a tab delimited SAM string, or an already tokenized list of
-        SAM fields.
+        Either a tab delimited SAM string, or an already tokenized 
+        list of SAM fields.
     
     Returns
     -------
@@ -214,7 +214,7 @@ def parse_sam_read(sam):
     return read
 
     
-class SamReader(object):
+class BamReader(object):
     def __init__(self, 
                  bam, 
                  paired=False, 
@@ -248,8 +248,6 @@ class SamReader(object):
         
         cmd = [self.__samtools, 'view', '-H', self.__bam]
 
-        print(cmd, file=sys.stderr)
-
         stdout = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout
 
         for l in stdout:
@@ -275,10 +273,6 @@ class SamReader(object):
         else:
             cmd = [self.__samtools, 'view', '-F', '4', self.__bam]
             
-        #print(cmd, file=sys.stderr)
-
-        #samfile = pysam.AlignmentFile(bam, 'rb')
-
         stdout = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout
         
         for l in stdout:
@@ -290,15 +284,20 @@ class SamReader(object):
             
         stdout.close()
         
-    def chr(self, chr):
+    def reads(self, l):
         """
         Iterate over the reads on a particular genome in the bam file.
+        
+        Parameters
+        ----------
+        l : str
+            A genomic location e.g. chr1:1-10.
         """
         
         if self.__paired:
-            cmd = [self.__samtools, 'view', '-f', '3', self.__bam, chr]
+            cmd = [self.__samtools, 'view', '-f', '3', self.__bam, l]
         else:
-            cmd = [self.__samtools, 'view', '-F', '4', self.__bam, chr]
+            cmd = [self.__samtools, 'view', '-F', '4', self.__bam, l]
             
         stdout = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout
         
@@ -310,6 +309,32 @@ class SamReader(object):
             yield read
             
         stdout.close()
+        
+    def count_reads(self, l):
+        """
+        Iterate over the reads on a particular genome in the bam file.
+        
+        Parameters
+        ----------
+        l : str
+            A location.
+        """
+        
+        if self.__paired:
+            cmd = [self.__samtools, 'view', '-c', '-f', '3', self.__bam, l]
+        else:
+            cmd = [self.__samtools, 'view', '-c', '-F', '4', self.__bam, l]
+         
+        #print(' '.join(cmd))
+        stdout = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout
+        
+        ret = int(stdout.readline().decode('utf-8').strip())
+        
+        stdout.close()
+    
+        return ret
+            
+        
         
 
 class BamWriter(object):
@@ -337,20 +362,52 @@ class BamWriter(object):
     
     
     def _write(self, text):
-        #print(text)
+        """
+        Internal method for writing to BAM file. Do not call this
+        method directly.
+        
+        Parameters
+        ----------
+        text : str
+            Text to write to BAM.
+        """
+        
         self.__stdin.write('{}\n'.format(text).encode('utf-8'))
         
     
     def write_header(self, samreader):
+        """
+        Writes the header from a SamReader to the BAM file. Note that
+        if you pipe the header as text from a SAM file into samtools
+        view and output in BAM format, the header will be encoded as
+        BAM and can be written to the beginning of the file. This does
+        not work if you output SAM.
+        
+        Parameters
+        ----------
+        samreader : SamReader
+            A SamReader object.
+        """
+        
         for line in samreader.header():
-            #print('blob ' + line)
             self._write(line)
     
     def write(self, read):
-        #print(read.tags[0])
+        """
+        Writes a SamRead to BAM.
+        
+        Parameters
+        ----------
+        read : SamRead
+            A SamRead object.
+        """
+        
         self._write(str(read))
         
-    
     def close(self):
+        """
+        Close the BAM file when finished writing.
+        """
+        
         self.__out.close()
         self.__stdin.close()
