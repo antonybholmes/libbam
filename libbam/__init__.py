@@ -1,2 +1,2 @@
 name = 'libbam'
-from libbam.libbam import *
+from .libbam import *
