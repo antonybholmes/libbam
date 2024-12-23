@@ -6,11 +6,10 @@ Created on Mon Aug 27 17:41:12 2018
 @author: Antony Holmes
 """
 
-import sys
 import subprocess
 
 
-class SamRead(object):
+class SamRead:
     def __init__(
         self,
         qname,
@@ -250,7 +249,7 @@ class BamReader:
             Each line of the header
         """
 
-        cmd = [self._samtools, "view", "-H", self.__bam]
+        cmd = [self._samtools, "view", "-H", self._bam]
 
         stdout = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout
 
@@ -272,7 +271,7 @@ class BamReader:
         Iterate over the reads in the bam file.
         """
 
-        if self.__paired:
+        if self._paired:
             cmd = [self._samtools, "view", "-f", "3", self._bam]
         else:
             cmd = [self._samtools, "view", "-F", "4", self._bam]
@@ -298,10 +297,10 @@ class BamReader:
             A genomic location e.g. chr1:1-10.
         """
 
-        if self.__paired:
-            cmd = [self.__samtools, "view", "-f", "3", self.__bam, loc]
+        if self._paired:
+            cmd = [self._samtools, "view", "-f", "3", self._bam, loc]
         else:
-            cmd = [self.__samtools, "view", "-F", "4", self.__bam, loc]
+            cmd = [self._samtools, "view", "-F", "4", self._bam, loc]
 
         stdout = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout
 
@@ -324,10 +323,10 @@ class BamReader:
             A location.
         """
 
-        if self.__paired:
-            cmd = [self.__samtools, "view", "-c", "-f", "3", self.__bam, loc]
+        if self._paired:
+            cmd = [self._samtools, "view", "-c", "-f", "3", self._bam, loc]
         else:
-            cmd = [self.__samtools, "view", "-c", "-F", "4", self.__bam, loc]
+            cmd = [self._samtools, "view", "-c", "-F", "4", self._bam, loc]
 
         # print(' '.join(cmd))
         stdout = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout
@@ -339,7 +338,7 @@ class BamReader:
         return ret
 
 
-class BamWriter(object):
+class BamWriter:
     def __init__(self, bam, paired=False, samtools="samtools"):
         """
         Create a new SAM reader
@@ -353,15 +352,15 @@ class BamWriter(object):
             found on the sys path
         """
 
-        self.__bam = bam
+        self._bam = bam
 
         # bam file to write to
-        self.__out = open(bam, "wb")
+        self._out = open(bam, "wb")
 
         # Maintain a pipe to output a sam read and write as bam ('-F', '4',)
         # Note the last '-' which samtools uses to get input from stdin
-        self.__stdin = subprocess.Popen(
-            [samtools, "view", "-Sb", "-"], stdin=subprocess.PIPE, stdout=self.__out
+        self._stdin = subprocess.Popen(
+            [samtools, "view", "-Sb", "-"], stdin=subprocess.PIPE, stdout=self._out
         ).stdin
 
     def _write(self, text):
@@ -375,7 +374,7 @@ class BamWriter(object):
             Text to write to BAM.
         """
 
-        self.__stdin.write("{}\n".format(text).encode("utf-8"))
+        self._stdin.write("{}\n".format(text).encode("utf-8"))
 
     def write_header(self, samreader):
         """
@@ -411,5 +410,5 @@ class BamWriter(object):
         Close the BAM file when finished writing.
         """
 
-        self.__out.close()
-        self.__stdin.close()
+        self._out.close()
+        self._stdin.close()
