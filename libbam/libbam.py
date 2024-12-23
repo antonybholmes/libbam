@@ -301,7 +301,7 @@ class BamReader:
         for l in stdout:
             tokens = l.decode("utf-8").strip().split("\t")
             chr = tokens[0]
-            if "_" not in chr:
+            if "chr" in chr and "_" not in chr:
                 chrs.append(chr)
 
         stdout.close()
