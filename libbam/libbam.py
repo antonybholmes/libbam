@@ -287,7 +287,28 @@ class BamReader:
 
         stdout.close()
 
-    def reads(self, loc: str):
+    def chrs(self):
+        """
+        List the chromosomes in the file
+        """
+
+        cmd = [self._samtools, "idxstat", self._bam]
+ 
+        stdout = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout
+
+        chrs = []
+
+        for l in stdout:
+            tokens = l.decode("utf-8").strip().split("\t")
+            chr = tokens[0]
+            if "_" not in chr:
+                chrs.append(chr)
+
+        stdout.close()
+
+        return chrs
+
+    def reads(self, loc: str=''):
         """
         Iterate over the reads on a particular genome in the bam file.
 
@@ -298,9 +319,14 @@ class BamReader:
         """
 
         if self._paired:
-            cmd = [self._samtools, "view", "-f", "3", self._bam, loc]
+            # properly mapped pair
+            cmd = [self._samtools, "view", "-f", "3", self._bam]
         else:
-            cmd = [self._samtools, "view", "-F", "4", self._bam, loc]
+            # mapped reads
+            cmd = [self._samtools, "view", "-F", "4", self._bam]
+
+        if loc:
+            cmd.append(loc)
 
         stdout = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout
 
