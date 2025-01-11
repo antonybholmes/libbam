@@ -323,8 +323,12 @@ class BamReader:
         """
 
         if self._paired:
-            # properly mapped pair
-            cmd = [self._samtools, "view", "-f", "3", self._bam]
+            # properly mapped pair, first in pair and we use
+            # the pnext and tlen to get an idea of the fragment
+            # length. We use the min of the start and pnext as
+            # the read start and the abs of tlen to get the fragment
+            # length
+            cmd = [self._samtools, "view", "-f", "67", self._bam]
         else:
             # mapped reads
             cmd = [self._samtools, "view", "-F", "4", self._bam]
