@@ -6,6 +6,7 @@ Created on Mon Aug 27 17:41:12 2018
 @author: Antony Holmes
 """
 
+import re
 import subprocess
 
 
@@ -25,26 +26,26 @@ class SamRead:
         qual,
         tags=[],
     ):
-        self.__qname = qname
-        self.__rname = rname
-        self.__flag = flag
-        self.__pos = pos
-        self.__mapq = mapq
-        self.__cigar = cigar
-        self.__rnext = rnext
-        self.__pnext = pnext
-        self.__tlen = tlen
-        self.__seq = seq
-        self.__qual = qual
-        self.__tags = tags
+        self._qname = qname
+        self._rname = rname
+        self._flag = flag
+        self._pos = pos
+        self._mapq = mapq
+        self._cigar = cigar
+        self._rnext = rnext
+        self._pnext = pnext
+        self._tlen = tlen
+        self._seq = seq
+        self._qual = qual
+        self._tags = tags
 
     @property
     def qname(self):
-        return self.__qname
+        return self._qname
 
     @property
     def flag(self):
-        return self.__flag
+        return self._flag
 
     @property
     def rname(self):
@@ -57,7 +58,7 @@ class SamRead:
             Reference name
         """
 
-        return self.__rname
+        return self._rname
 
     @property
     def pos(self):
@@ -70,7 +71,7 @@ class SamRead:
             Start position of alignment.
         """
 
-        return self.__pos
+        return self._pos
 
     @property
     def mapq(self):
@@ -83,7 +84,7 @@ class SamRead:
             Mapping quality
         """
 
-        return self.__mapq
+        return self._mapq
 
     @property
     def cigar(self):
@@ -96,27 +97,27 @@ class SamRead:
             CIGAR alignment
         """
 
-        return self.__cigar
+        return self._cigar
 
     @property
     def rnext(self):
-        return self.__rnext
+        return self._rnext
 
     @property
     def pnext(self):
-        return self.__pnext
+        return self._pnext
 
     @property
     def tlen(self):
-        return self.__tlen
+        return self._tlen
 
     @property
     def seq(self):
-        return self.__seq
+        return self._seq
 
     @property
     def qual(self):
-        return self.__qual
+        return self._qual
 
     @property
     def is_paired(self):
@@ -132,11 +133,11 @@ class SamRead:
 
     @property
     def tags(self):
-        return self.__tags
+        return self._tags
 
     @tags.setter
     def tags(self, tags):
-        self.__tags = tags
+        self._tags = tags
 
     def __str__(self):
         """
@@ -289,7 +290,7 @@ class BamReader:
 
     def chrs(self):
         """
-        List the chromosomes in the file
+        List the chromosomes in the file.
         """
 
         cmd = [self._samtools, "idxstat", self._bam]
@@ -301,16 +302,19 @@ class BamReader:
         for l in stdout:
             tokens = l.decode("utf-8").strip().split("\t")
             chr = tokens[0]
-            if "chr" in chr and "_" not in chr:
+
+            #if not chr.startswith("chr"):
+
+            if re.match(r'^(chr)?(\d+|[XYxyMm])$', chr):
                 chrs.append(chr)
 
         stdout.close()
 
-        return chrs
+        return chrs #list(sorted(chrs))
 
     def reads(self, loc: str=''):
         """
-        Iterate over the reads on a particular genome in the bam file.
+        Iterate over the reads on a particular location, e.g. chromosome in the bam file.
 
         Parameters
         ----------
